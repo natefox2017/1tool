@@ -11,6 +11,34 @@ enum SuperRightClickTests {
                      "custom menus travel with settings backups")
         suite.expect(AppFeature.superRightClick.enabledKeys == [DefaultsKey.superRightClickEnabled],
                      "availability and behavior use independent switches")
+        suite.expect(SuperRightClickTemplates.normalizedExtension(" .MD ") == "md",
+                     "extensions normalize pasted dots, whitespace and case")
+        for invalid in ["", ".", "../html", "a/b", "bad ext", "xls\0", "x;y", String(repeating: "x", count: 33)] {
+            suite.expect(!SuperRightClickTemplates.validExtension(invalid), "unsafe template extension is rejected")
+        }
+        let presets = SuperRightClickTemplatePreset.allCases.filter { $0 != .custom }
+        suite.expect(["txt", "md", "html", "js", "docx", "xlsx"].allSatisfy { value in
+            presets.contains { $0.entry.value == value }
+        }, "common file types are offered in the template editor")
+        suite.expect(presets.allSatisfy { SuperRightClickTemplates.validExtension($0.entry.value) },
+                     "every built-in template has a valid extension")
+        let resources = URL(fileURLWithPath: "Resources/FileTemplates", isDirectory: true)
+        do {
+            let html = try SuperRightClickTemplates.data(for: SuperRightClickTemplatePreset.html.entry,
+                                                       resourceDirectory: resources)
+            suite.expect(String(data: html, encoding: .utf8)?.hasPrefix("<!DOCTYPE html>") == true,
+                         "HTML preset writes its actual starter content")
+            for type in [SuperRightClickTemplatePreset.docx, .xlsx] {
+                let data = try SuperRightClickTemplates.data(for: type.entry, resourceDirectory: resources)
+                suite.expect(data.starts(with: [0x50, 0x4b, 0x03, 0x04]),
+                             "Office templates write a document package, not an empty renamed text file")
+            }
+            do {
+                _ = try SuperRightClickTemplates.data(for: SuperRightClickTemplatePreset.xlsx.entry,
+                                                     resourceDirectory: nil)
+                suite.expect(false, "missing Office resources must fail instead of writing a corrupt file")
+            } catch { suite.expect(true, "missing Office resources fail closed") }
+        } catch { suite.expect(false, "template data generation failed: \(error)") }
         var config = SuperRightClickConfiguration()
         config.order = [.copyPath, .copyPath, .directories]
         config.hiddenGroups = [.directories]

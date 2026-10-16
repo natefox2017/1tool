@@ -171,7 +171,10 @@ final class SuperRightClickService: NSObject, ObservableObject {
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         do {
             let url = try SuperRightClickFiles.create(name: field.stringValue, in: directory,
-                                                     content: Data((template?.content ?? "").utf8))
+                                                     content: try SuperRightClickTemplates.data(
+                                                        for: template,
+                                                        resourceDirectory: Bundle.main.resourceURL?
+                                                            .appendingPathComponent("FileTemplates")))
             NSWorkspace.shared.activateFileViewerSelecting([url])
         } catch { fail(error.localizedDescription) }
     }

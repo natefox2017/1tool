@@ -9,6 +9,7 @@ struct SuperRightClickSettings: View {
     @ObservedObject private var service = SuperRightClickService.shared
     @ObservedObject private var l10n = L10n.shared
     @AppStorage(DefaultsKey.superRightClickEnabled) private var enabled = false
+    @State private var editingTemplate: SuperRightClickEntry?
     @State private var extensionEnabled = FIFinderSyncController.isExtensionEnabled
 
     private func text(_ zh: String, _ en: String) -> String { service.text(zh, en) }
@@ -60,23 +61,28 @@ struct SuperRightClickSettings: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section(text("新建文件模板", "New File Templates")) {
-                ForEach($service.configuration.templates) { $entry in
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            TextField(text("菜单名称", "Menu Name"), text: $entry.name).labelsHidden()
-                                .accessibilityLabel(text("模板名称", "Template Name") + " " + entry.name)
-                            TextField(text("扩展名，如 txt", "Extension, e.g. txt"), text: $entry.value).labelsHidden()
-                                .frame(maxWidth: 160)
-                                .accessibilityLabel(entry.name + " " + text("扩展名", "Extension"))
-                            removeButton(name: entry.name) { service.configuration.templates.removeAll { $0.id == entry.id } }
+                ForEach(service.configuration.templates) { entry in
+                    HStack(alignment: .center, spacing: 12) {
+                        Text(entry.name)
+                            .lineLimit(1).truncationMode(.tail)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Text("." + entry.value)
+                            .foregroundStyle(.secondary).lineLimit(1)
+                            .frame(width: 80, alignment: .leading)
+                        Button { editingTemplate = entry } label: {
+                            Image(systemName: "square.and.pencil")
                         }
-                        TextField(text("初始内容（可留空）", "Initial Content (optional)"), text: $entry.content, axis: .vertical).labelsHidden()
-                            .lineLimit(2...5)
-                            .accessibilityLabel(entry.name + " " + text("初始内容", "Initial Content"))
+                        .help(text("编辑模板", "Edit Template"))
+                        .accessibilityLabel(text("编辑模板", "Edit Template") + " " + entry.name)
+                        removeButton(name: entry.name) {
+                            service.configuration.templates.removeAll { $0.id == entry.id }
+                        }
                     }
+                    .buttonStyle(.borderless)
+                    .frame(minHeight: 28)
                 }
-                Button(text("添加模板", "Add Template")) {
-                    service.configuration.templates.append(SuperRightClickEntry(name: "TXT", value: "txt"))
+                Button(text("添加模板…", "Add Template…")) {
+                    editingTemplate = SuperRightClickTemplatePreset.txt.entry
                 }.disabled(service.configuration.templates.count >= 32)
             }
             Section(text("常用目录", "Favorite Folders")) {
@@ -133,6 +139,18 @@ struct SuperRightClickSettings: View {
             }
         }
         .formStyle(.grouped)
+        .sheet(item: $editingTemplate) { entry in
+            SuperRightClickTemplateEditor(
+                entry: entry, chinese: service.chinese,
+                isNew: !service.configuration.templates.contains { $0.id == entry.id }
+            ) { saved in
+                if let index = service.configuration.templates.firstIndex(where: { $0.id == saved.id }) {
+                    service.configuration.templates[index] = saved
+                } else if service.configuration.templates.count < 32 {
+                    service.configuration.templates.append(saved)
+                }
+            }
+        }
         .onAppear { service.refreshApplications() }
         .onChange(of: service.configuration) { _, _ in service.save() }
         .onChange(of: l10n.language) { _, _ in service.syncWithPreferences() }

@@ -456,6 +456,7 @@ if (( TEST )); then
         Sources/Vorssaint/Services/Finder/CutPastePrivilegeSupport.swift
         Sources/Vorssaint/Services/Finder/FinderPasteImageSupport.swift
         Sources/Vorssaint/Services/Finder/SuperRightClickSupport.swift
+        Sources/Vorssaint/Services/Finder/SuperRightClickTemplates.swift
         Sources/Vorssaint/Services/MiddleClick/MiddleClickSupport.swift
         Sources/Vorssaint/Services/MouseNavigation/MouseNavigationSupport.swift
         Sources/Vorssaint/Services/MouseNavigation/MouseNavigationKeys.swift
@@ -678,6 +679,7 @@ mkdir -p "$STAGE/Contents/Frameworks"
 cp "build/$NOW_PLAYING_ADAPTER" "$STAGE/Contents/Frameworks/$NOW_PLAYING_ADAPTER"
 cp Resources/now-playing.pl "$STAGE/Contents/Resources/now-playing.pl"
 cp Resources/agent-prices.json "$STAGE/Contents/Resources/agent-prices.json"
+cp -R Resources/FileTemplates "$STAGE/Contents/Resources/"
 cp Resources/com.vorssaint.utils.fan-control.plist \
     "$STAGE/Contents/Library/LaunchDaemons/$FAN_HELPER_ID.plist"
 cp Resources/Info.plist "$STAGE/Contents/Info.plist"
