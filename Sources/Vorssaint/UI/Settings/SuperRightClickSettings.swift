@@ -68,9 +68,10 @@ struct SuperRightClickSettings: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                         Text("." + entry.value)
                             .foregroundStyle(.secondary).lineLimit(1)
-                            .frame(width: 80, alignment: .leading)
+                            .frame(width: 80, height: 28, alignment: .leading)
                         Button { editingTemplate = entry } label: {
                             Image(systemName: "square.and.pencil")
+                                .frame(width: 16, height: 16)
                         }
                         .help(text("编辑模板", "Edit Template"))
                         .accessibilityLabel(text("编辑模板", "Edit Template") + " " + entry.name)
@@ -78,7 +79,8 @@ struct SuperRightClickSettings: View {
                             service.configuration.templates.removeAll { $0.id == entry.id }
                         }
                     }
-                    .buttonStyle(.borderless)
+                    .buttonStyle(.bordered)
+                    .controlSize(.regular)
                     .frame(minHeight: 28)
                 }
                 Button(text("添加模板…", "Add Template…")) {
@@ -172,7 +174,12 @@ struct SuperRightClickSettings: View {
         }
     }
     private func removeButton(name: String, action: @escaping () -> Void) -> some View {
-        Button(role: .destructive, action: action) { Image(systemName: "minus.circle") }
+        Button(role: .destructive, action: action) {
+            Image(systemName: "minus.circle")
+                .frame(width: 16, height: 16)
+        }
+            .buttonStyle(.bordered)
+            .controlSize(.regular)
             .accessibilityLabel(text("移除项目", "Remove Item") + " " + name)
     }
     private func moveGroup(_ group: SuperRightClickGroup, by offset: Int) {
