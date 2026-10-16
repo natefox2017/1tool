@@ -314,6 +314,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSW
         KeyboardDebounceService.shared.suspend()
         MouseClickDebounceService.shared.suspend()
         TextSnippetService.shared.suspend()
+        if AppFeature.defaultInputSource.isAvailable { DefaultInputSourceService.shared.stop() }
         SuperRightClickService.shared.stop()
         // Takes the Super key mapping back out before the process goes away.
         SuperKeyService.shared.suspend()

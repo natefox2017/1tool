@@ -263,6 +263,7 @@ final class FeatureRuntime: ObservableObject {
         .mouseClickDebounce: { MouseClickDebounceService.shared.syncWithPreferences() },
         .keyboardDebounce: { KeyboardDebounceService.shared.syncWithPreferences() },
         .quitWindowProtection: { QuitProtectionService.shared.syncWithPreferences() },
+        .defaultInputSource: { DefaultInputSourceService.shared.syncWithPreferences() },
         .superRightClick: { SuperRightClickService.shared.syncWithPreferences() },
         .superKey: { SuperKeyService.shared.syncWithPreferences() },
         .textSnippets: {

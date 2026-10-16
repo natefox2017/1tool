@@ -8,7 +8,7 @@ import Foundation
 /// below and the unit tests can reason about pages without pulling UI in.
 enum SettingsPage: Hashable {
     case general, features, energy, monitor
-    case mouse, switcher, dock, keyDebounce, superKey, superRightClick, cutPaste, autoQuit, quitProtection, cleaner, uninstaller, urlCleaner, homebrew, appUpdates, media, clipboard, windowLayout, shelf, quickTools, textSnippets, screenshot, radialMenu, commandBar, killProcess, portManager, notch, notchMascot
+    case mouse, switcher, dock, keyDebounce, superKey, superRightClick, defaultInputSource, cutPaste, autoQuit, quitProtection, cleaner, uninstaller, urlCleaner, homebrew, appUpdates, media, clipboard, windowLayout, shelf, quickTools, textSnippets, screenshot, radialMenu, commandBar, killProcess, portManager, notch, notchMascot
     case shortcuts, advanced, about, releaseNotes, support
 }
 
@@ -311,6 +311,7 @@ extension AppFeature {
             return FeatureSettingsDestination(.mouse, sectionAnchor: .mouseClickDebounce)
         case .keyboardDebounce: return FeatureSettingsDestination(.keyDebounce)
         case .textSnippets: return FeatureSettingsDestination(.textSnippets)
+        case .defaultInputSource: return FeatureSettingsDestination(.defaultInputSource)
         case .superRightClick: return FeatureSettingsDestination(.superRightClick)
         case .superKey: return FeatureSettingsDestination(.superKey)
 
@@ -421,6 +422,7 @@ enum FeatureVisibilitySupport {
         case .killProcess: return [.killProcess]
         case .portManager: return [.portManager]
         case .keyDebounce: return [.keyboardDebounce]
+        case .defaultInputSource: return [.defaultInputSource]
         case .superRightClick: return [.superRightClick]
         case .superKey: return [.superKey]
         case .textSnippets: return [.textSnippets]

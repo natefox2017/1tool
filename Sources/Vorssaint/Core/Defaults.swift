@@ -74,6 +74,9 @@ enum DefaultsKey {
     static let mouseSpacesGestureFollowsDrag = "mouseSpacesGestureFollowsDrag" // the Space moves with the hand, the way natural scrolling does
     static let mouseClickDebounceEnabled = "mouseClickDebounceEnabled"
     static let mouseClickDebounceWindowMs = "mouseClickDebounceWindowMs"
+    static let defaultInputSourceEnabled = "defaultInputSourceEnabled"
+    static let defaultInputSourceFallback = "defaultInputSourceFallback"
+    static let defaultInputSourceRules = "defaultInputSourceRules"
     static let superRightClickEnabled = "superRightClickEnabled"
     static let superRightClickConfiguration = "superRightClickConfiguration"
     static let superKeyEnabled = "superKeyEnabled"        // chosen key holds the configured modifiers (issue #330)
@@ -1233,6 +1236,9 @@ enum Defaults {
         DefaultsKey.mouseSpacesGestureFollowsDrag: false,
         DefaultsKey.mouseClickDebounceEnabled: false,
         DefaultsKey.mouseClickDebounceWindowMs: defaultMouseClickDebounceWindowMs,
+        DefaultsKey.defaultInputSourceEnabled: false,
+        DefaultsKey.defaultInputSourceFallback: "",
+        DefaultsKey.defaultInputSourceRules: "",
         DefaultsKey.superRightClickEnabled: false,
         DefaultsKey.superKeyEnabled: false,
         DefaultsKey.superKeySource: SuperKeySource.capsLock.rawValue,

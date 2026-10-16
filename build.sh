@@ -455,6 +455,7 @@ if (( TEST )); then
         Sources/Vorssaint/Services/Finder/CutPasteProgressSupport.swift
         Sources/Vorssaint/Services/Finder/CutPastePrivilegeSupport.swift
         Sources/Vorssaint/Services/Finder/FinderPasteImageSupport.swift
+        Sources/Vorssaint/Services/DefaultInputSource/DefaultInputSourceSupport.swift
         Sources/Vorssaint/Services/Finder/SuperRightClickSupport.swift
         Sources/Vorssaint/Services/Finder/SuperRightClickTemplates.swift
         Sources/Vorssaint/Services/MiddleClick/MiddleClickSupport.swift

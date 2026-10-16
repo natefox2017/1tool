@@ -17,7 +17,7 @@ enum AppFeature: String, CaseIterable {
     case switcher, dockPreview, dockClick, windowMaximizer, windowLayout, autoQuit, spacesOrder
     // Mouse and keyboard
     case scrollInverter, scrollHorizontal, focusFollowsMouse, smoothScroll, linearScroll, mouseAcceleration, mouseNavigation, mouseButtonShortcuts, middleClick,
-         mouseClickDebounce, keyboardDebounce, textSnippets, superKey, superRightClick, quitWindowProtection
+         mouseClickDebounce, keyboardDebounce, textSnippets, superKey, superRightClick, defaultInputSource, quitWindowProtection
     // Clipboard and files
     case clipboardHistory, pastePlain, finderCutPaste, finderRename, shelf, urlCleaner,
          diskImageInstaller
@@ -104,7 +104,7 @@ extension AppFeature {
         case .switcher, .dockPreview, .dockClick, .windowMaximizer, .windowLayout, .autoQuit, .spacesOrder:
             return .windowsDock
         case .scrollInverter, .scrollHorizontal, .focusFollowsMouse, .smoothScroll, .linearScroll, .mouseAcceleration, .mouseNavigation, .mouseButtonShortcuts, .middleClick,
-             .keyboardDebounce, .textSnippets, .superKey, .superRightClick, .quitWindowProtection, .mouseClickDebounce:
+             .keyboardDebounce, .textSnippets, .superKey, .superRightClick, .defaultInputSource, .quitWindowProtection, .mouseClickDebounce:
             return .mouseKeyboard
         case .clipboardHistory, .pastePlain, .finderCutPaste, .finderRename, .shelf, .urlCleaner,
              .diskImageInstaller:
@@ -147,6 +147,7 @@ extension AppFeature {
         case .middleClick: return "hand.tap"
         case .keyboardDebounce: return "keyboard"
         case .textSnippets: return "text.append"
+        case .defaultInputSource: return "character.cursor.ibeam"
         case .superRightClick: return "filemenu.and.cursorarrow"
         case .superKey:
             return SuperKeySource.sanitized(
@@ -256,6 +257,7 @@ extension AppFeature {
         case .quitWindowProtection:
             return [DefaultsKey.quitProtectionQuitEnabled, DefaultsKey.quitProtectionCloseEnabled]
         case .textSnippets: return [DefaultsKey.textSnippetsEnabled, DefaultsKey.snippetLibraryEnabled]
+        case .defaultInputSource: return [DefaultsKey.defaultInputSourceEnabled]
         case .superRightClick: return [DefaultsKey.superRightClickEnabled]
         case .superKey: return [DefaultsKey.superKeyEnabled]
         case .mouseClickDebounce: return [DefaultsKey.mouseClickDebounceEnabled]
@@ -361,6 +363,7 @@ extension AppFeature {
             return [.accessibility]
         case .finderCutPaste: return [.accessibility, .automationFinder]
         case .finderRename: return [.accessibility]
+        case .defaultInputSource: return []
         case .superRightClick: return [.filesAndFolders, .automationTerminal]
         // Only emptying the Trash asks the Finder; every other quick toggle
         // (dark mode included) works without a permission.
@@ -487,7 +490,7 @@ extension AppFeature {
              .connectedDevices:
             return true
         case .focusFollowsMouse, .scrollHorizontal, .linearScroll, .diskImageInstaller, .audioPriority,
-             .wallpaper, .killProcess, .portManager, .fanControl, .notchMascot, .spacesOrder:
+             .wallpaper, .killProcess, .portManager, .fanControl, .notchMascot, .spacesOrder, .defaultInputSource:
             return false
         }
     }

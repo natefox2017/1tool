@@ -587,6 +587,7 @@ struct SettingsView: View {
         case .keyDebounce: KeyboardDebounceSettings()
         case .superKey: SuperKeySettings()
         case .superRightClick: SuperRightClickSettings()
+        case .defaultInputSource: DefaultInputSourceSettings()
         case .cutPaste: CutPasteSettings()
         case .autoQuit: AutoQuitSettings()
         case .quitProtection: QuitProtectionSettings()

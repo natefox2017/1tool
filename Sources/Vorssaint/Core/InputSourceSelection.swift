@@ -94,6 +94,14 @@ enum InputSourceSelection {
         let name: String
     }
 
+    static func availableReadings() -> [Reading] {
+        selectableInputSources().compactMap { source in
+            guard let id = inputSourceString(source, property: kTISPropertyInputSourceID) else { return nil }
+            return Reading(id: id, code: shortCode(languages: languages(of: source)),
+                           name: inputSourceString(source, property: kTISPropertyLocalizedName) ?? id)
+        }
+    }
+
     static func currentReading() -> Reading? {
         guard let source = TISCopyCurrentKeyboardInputSource()?.takeRetainedValue(),
               let id = inputSourceString(source, property: kTISPropertyInputSourceID)

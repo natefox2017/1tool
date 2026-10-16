@@ -85,6 +85,7 @@ enum ReleaseChangeAliases {
         case .keyboardDebounce: return ["keyboard debounce", "key debounce", "debounce",
             "keyboard and mouse debounce"]
         case .textSnippets: return ["text snippets", "snippets", "snippet"]
+        case .defaultInputSource: return ["default input source", "默认输入法"]
         case .superRightClick: return ["super right click", "超级右键"]
         case .superKey: return ["super key"]
         case .quitWindowProtection: return ["quit protection", "quit & close protection",
