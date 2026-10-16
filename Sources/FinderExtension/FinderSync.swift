@@ -12,16 +12,29 @@ final class VorssaintFinderSync: FIFinderSync {
 
     override init() {
         super.init()
-        // Keep the root registered for this extension's lifetime. Removing it
-        // while disabled can strand menus in already-open Finder windows.
-        // No badge or filesystem-observation callbacks are implemented.
-        FIFinderSyncController.default().directoryURLs = [URL(fileURLWithPath: "/")]
+        // A root on the startup volume does not cover separately mounted disks.
+        // Keep scope registered while disabled so existing windows keep menus.
+        refreshDirectories()
+        for name in [NSWorkspace.didMountNotification, NSWorkspace.didUnmountNotification,
+                     NSWorkspace.didRenameVolumeNotification] {
+            NSWorkspace.shared.notificationCenter.addObserver(
+                self, selector: #selector(refreshDirectories), name: name, object: nil)
+        }
         DistributedNotificationCenter.default().addObserver(
             self, selector: #selector(receiveConfiguration(_:)),
             name: SuperRightClickIPC.configuration, object: nil)
         requestConfiguration()
     }
-    deinit { DistributedNotificationCenter.default().removeObserver(self) }
+    deinit {
+        DistributedNotificationCenter.default().removeObserver(self)
+        NSWorkspace.shared.notificationCenter.removeObserver(self)
+    }
+
+    @objc private func refreshDirectories() {
+        let volumes = FileManager.default.mountedVolumeURLs(
+            includingResourceValuesForKeys: nil, options: [.skipHiddenVolumes]) ?? []
+        FIFinderSyncController.default().directoryURLs = SuperRightClickScope.directories(volumes: volumes)
+    }
 
     private func requestConfiguration() {
         DistributedNotificationCenter.default().postNotificationName(
@@ -36,10 +49,11 @@ final class VorssaintFinderSync: FIFinderSync {
     override func menu(for menuKind: FIMenuKind) -> NSMenu? {
         requestConfiguration()
         guard config.enabled,
-              menuKind == .contextualMenuForItems || menuKind == .contextualMenuForContainer,
-              let target = FIFinderSyncController.default().targetedURL() else { return nil }
-        let selected = menuKind == .contextualMenuForItems
-            ? (FIFinderSyncController.default().selectedItemURLs() ?? []) : []
+              menuKind == .contextualMenuForItems || menuKind == .contextualMenuForContainer else { return nil }
+        let controller = FIFinderSyncController.default()
+        let selected = menuKind == .contextualMenuForItems ? (controller.selectedItemURLs() ?? []) : []
+        guard let target = SuperRightClickScope.target(targeted: controller.targetedURL(),
+                                                     selection: selected) else { return nil }
         let menu = NSMenu()
         // Keep recent snapshots for menus in other Finder windows. Never reuse
         // a tag for a different selection while an older menu might be open.

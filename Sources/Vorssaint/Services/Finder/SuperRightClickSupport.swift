@@ -24,6 +24,21 @@ enum SuperRightClickIPC {
     }
 }
 
+/// Finder registers scopes per volume. Virtual views may have selected items
+/// without exposing a directory target; use those real URLs for item actions.
+enum SuperRightClickScope {
+    static func directories(volumes: [URL]) -> Set<URL> {
+        Set(([URL(fileURLWithPath: "/"), URL(fileURLWithPath: "/System/Volumes/Data")]
+             + volumes.filter(\.isFileURL)).map(\.standardizedFileURL))
+    }
+
+    static func target(targeted: URL?, selection: [URL]) -> URL? {
+        ([targeted].compactMap { $0 } + selection).first {
+            $0.isFileURL && $0.path.hasPrefix("/") && !$0.path.contains("\0")
+        }
+    }
+}
+
 enum SuperRightClickGroup: String, Codable, CaseIterable, Identifiable {
     case newFile, directories, copyPath, openWith
     var id: String { rawValue }
@@ -149,6 +164,12 @@ enum SuperRightClickFiles {
         guard target.hasPrefix("/"), !target.contains("\0") else { return nil }
         if selection.count == 1, let selectedFolder = directory(selection[0]) { return selectedFolder }
         if let folder = directory(target) { return folder }
+        // Tags and searches can supply a virtual target. Resolve the selected
+        // item's parent instead of creating a file beside a saved search.
+        if let first = selection.first, first.hasPrefix("/"), !first.contains("\0"),
+           let parent = directory(URL(fileURLWithPath: first).deletingLastPathComponent().path) {
+            return parent
+        }
         return directory(URL(fileURLWithPath: target).deletingLastPathComponent().path)
     }
     // O_EXCL prevents overwrites, including dangling symlinks and races.

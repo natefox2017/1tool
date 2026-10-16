@@ -39,6 +39,22 @@ enum SuperRightClickTests {
                 suite.expect(false, "missing Office resources must fail instead of writing a corrupt file")
             } catch { suite.expect(true, "missing Office resources fail closed") }
         } catch { suite.expect(false, "template data generation failed: \(error)") }
+        let external = URL(fileURLWithPath: "/Volumes/External Drive")
+        let scopes = SuperRightClickScope.directories(volumes: [external, external])
+        suite.expect(scopes.contains(external) && scopes.contains(URL(fileURLWithPath: "/")),
+                     "external volumes have explicit scopes alongside the startup disk")
+        suite.expect(scopes.contains(URL(fileURLWithPath: "/System/Volumes/Data")),
+                     "the APFS data volume has its own scope")
+        suite.expect(!SuperRightClickScope.directories(volumes: []).contains(external),
+                     "refreshing after unmount removes the old volume scope")
+        let selectedURL = external.appendingPathComponent("tagged.txt")
+        suite.expect(SuperRightClickScope.target(targeted: nil, selection: [selectedURL]) == selectedURL,
+                     "tag item menus use the selected file when no directory target exists")
+        suite.expect(SuperRightClickScope.target(targeted: URL(string: "search://tags"),
+                                                selection: [selectedURL]) == selectedURL,
+                     "virtual targets do not hide menus for real selected files")
+        suite.expect(SuperRightClickScope.target(targeted: nil, selection: []) == nil,
+                     "virtual backgrounds without a real location do not invent a directory")
         var config = SuperRightClickConfiguration()
         config.order = [.copyPath, .copyPath, .directories]
         config.hiddenGroups = [.directories]
@@ -101,6 +117,10 @@ enum SuperRightClickTests {
                          "selected file actions use its parent folder")
             suite.expect(SuperRightClickFiles.insertionDirectory(target: root.path, selection: [])?.resolvingSymlinksInPath().path == root.resolvingSymlinksInPath().path,
                          "background actions use the current folder")
+            suite.expect(SuperRightClickFiles.insertionDirectory(
+                target: root.appendingPathComponent("virtual/missing.savedSearch").path,
+                selection: [file.path])?.resolvingSymlinksInPath().path == root.resolvingSymlinksInPath().path,
+                         "tag and search selections resolve the actual containing directory")
             let child = root.appendingPathComponent("child")
             try FileManager.default.createDirectory(at: child, withIntermediateDirectories: true)
             suite.expect(SuperRightClickFiles.insertionDirectory(target: root.path, selection: [child.path])?.resolvingSymlinksInPath().path == child.resolvingSymlinksInPath().path,
