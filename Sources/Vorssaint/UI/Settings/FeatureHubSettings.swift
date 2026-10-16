@@ -1020,6 +1020,7 @@ extension AppFeature {
         case .middleClick: return s.middleClickSection
         case .keyboardDebounce: return s.keyDebounceName
         case .textSnippets: return FeatureStrings.snippets(L10n.shared.language).pageTitle
+        case .superRightClick: return L10n.shared.language.rawValue.hasPrefix("zh") ? "超级右键" : "Super Right Click"
         case .superKey: return FeatureStrings.superKey(L10n.shared.language).pageTitle
         case .mouseClickDebounce:
             return FeatureStrings.mouseClickDebounce(L10n.shared.language).title
@@ -1104,6 +1105,7 @@ extension AppFeature {
         case .middleClick: return hub.descMiddleClick
         case .keyboardDebounce: return hub.descKeyboardDebounce
         case .textSnippets: return FeatureStrings.snippets(L10n.shared.language).hubDescription
+        case .superRightClick: return L10n.shared.language.rawValue.hasPrefix("zh") ? "在 Finder 右键新建文件、复制路径、打开常用目录和软件。" : "Create files, copy paths and open folders or apps from Finder context menus."
         case .superKey: return FeatureStrings.superKey(L10n.shared.language).hubDescription
         case .mouseClickDebounce:
             return FeatureStrings.mouseClickDebounce(L10n.shared.language).caption

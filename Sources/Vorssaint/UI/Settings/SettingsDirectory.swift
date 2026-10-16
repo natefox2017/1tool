@@ -418,6 +418,10 @@ enum SettingsDirectory {
                                       keywords: SuperKeySource.allCases.map {
                                           FeatureStrings.superKey(language).sourceLabel($0)
                                       }),
+                SettingsDirectoryItem(page: .superRightClick,
+                                      title: language.rawValue.hasPrefix("zh") ? "超级右键" : "Super Right Click",
+                                      icon: "filemenu.and.cursorarrow",
+                                      keywords: ["Finder", "右键", "新建文件", "复制路径", "templates", "terminal"]),
                 SettingsDirectoryItem(page: .textSnippets,
                                       title: FeatureStrings.snippets(language).pageTitle,
                                       icon: "text.append",

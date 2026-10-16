@@ -110,10 +110,10 @@ final class QuickTogglesService: ObservableObject {
 
     /// Writes the Finder preference and restarts the Finder to apply it;
     /// launchd brings it right back with the new value in effect.
-    func toggleHiddenFiles() {
+    func toggleHiddenFiles(authorizedBy feature: AppFeature = .quickToggles) {
         toggleFinderFlag(.hiddenFiles,
                          key: QuickTogglesSupport.showAllFilesKey,
-                         to: !hiddenFilesShown)
+                         to: !hiddenFilesShown, authorizedBy: feature)
     }
 
     func toggleDesktopIcons() {
@@ -238,8 +238,10 @@ final class QuickTogglesService: ObservableObject {
         }
     }
 
-    private func toggleFinderFlag(_ action: QuickToggleAction, key: String, to value: Bool) {
-        guard available, beginRun(action) else { return }
+    private func toggleFinderFlag(_ action: QuickToggleAction, key: String, to value: Bool,
+                                  authorizedBy feature: AppFeature = .quickToggles) {
+        guard feature == .quickToggles || feature == .superRightClick,
+              feature.isAvailable, beginRun(action) else { return }
         workQueue.async {
             CFPreferencesSetAppValue(key as CFString,
                                      value as CFBoolean,

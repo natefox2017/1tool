@@ -153,6 +153,7 @@ finalize_installed_bundle_after_child() {
     local bundle="$1"
     local helper="$bundle/Contents/Library/LaunchServices/$FAN_HELPER_ID"
     local adapter="$bundle/Contents/Frameworks/$NOW_PLAYING_ADAPTER"
+    local finder_extension="$bundle/Contents/PlugIns/VorssaintFinderExtension.appex"
     local devid
     devid="$(developer_id_identity)"
 
@@ -164,18 +165,22 @@ finalize_installed_bundle_after_child() {
         [[ -f "$adapter" ]] && codesign_with_timestamp_retry --force --strip-disallowed-xattrs \
             --options runtime --timestamp --identifier "$NOW_PLAYING_ADAPTER_ID" --sign "$devid" "$adapter"
         codesign_with_timestamp_retry --force --strip-disallowed-xattrs --options runtime --timestamp \
+            --entitlements Resources/FinderExtension.entitlements --sign "$devid" "$finder_extension"
+        codesign_with_timestamp_retry --force --strip-disallowed-xattrs --options runtime --timestamp \
             --entitlements "$ENTITLEMENTS" --sign "$devid" "$bundle"
     elif legacy_identity_installed; then
         [[ -f "$helper" ]] && /usr/bin/codesign --force --strip-disallowed-xattrs \
             --identifier "$FAN_HELPER_ID" --sign "$LEGACY_IDENTITY" "$helper"
         [[ -f "$adapter" ]] && /usr/bin/codesign --force --strip-disallowed-xattrs \
             --identifier "$NOW_PLAYING_ADAPTER_ID" --sign "$LEGACY_IDENTITY" "$adapter"
+        /usr/bin/codesign --force --strip-disallowed-xattrs --entitlements Resources/FinderExtension.entitlements --sign "$LEGACY_IDENTITY" "$finder_extension"
         /usr/bin/codesign --force --strip-disallowed-xattrs --sign "$LEGACY_IDENTITY" "$bundle"
     else
         [[ -f "$helper" ]] && /usr/bin/codesign --force --strip-disallowed-xattrs \
             --identifier "$FAN_HELPER_ID" --sign - "$helper"
         [[ -f "$adapter" ]] && /usr/bin/codesign --force --strip-disallowed-xattrs \
             --identifier "$NOW_PLAYING_ADAPTER_ID" --sign - "$adapter"
+        /usr/bin/codesign --force --strip-disallowed-xattrs --entitlements Resources/FinderExtension.entitlements --sign - "$finder_extension"
         /usr/bin/codesign --force --strip-disallowed-xattrs --sign - "$bundle"
     fi
     [[ -f "$helper" ]] && /usr/bin/codesign --verify --strict "$helper"
@@ -450,6 +455,7 @@ if (( TEST )); then
         Sources/Vorssaint/Services/Finder/CutPasteProgressSupport.swift
         Sources/Vorssaint/Services/Finder/CutPastePrivilegeSupport.swift
         Sources/Vorssaint/Services/Finder/FinderPasteImageSupport.swift
+        Sources/Vorssaint/Services/Finder/SuperRightClickSupport.swift
         Sources/Vorssaint/Services/MiddleClick/MiddleClickSupport.swift
         Sources/Vorssaint/Services/MouseNavigation/MouseNavigationSupport.swift
         Sources/Vorssaint/Services/MouseNavigation/MouseNavigationKeys.swift
@@ -611,6 +617,14 @@ swiftc -O -target "$TARGET" -sdk "$SDK" "${SDK_COMPAT_FLAGS[@]}" "${BUILD_VARIAN
     -o "build/$FAN_HELPER_ID"
 "build/$FAN_HELPER_ID" --selftest
 
+echo "▸ Compiling Finder menu extension…"
+swiftc "${APP_OPTIMIZATION_FLAGS[@]}" -parse-as-library -application-extension \
+    -target "$TARGET" -sdk "$SDK" "${SDK_COMPAT_FLAGS[@]}" "${BUILD_VARIANT_FLAGS[@]}" \
+    Sources/FinderExtension/FinderSync.swift \
+    Sources/Vorssaint/Services/Finder/SuperRightClickSupport.swift \
+    -framework FinderSync -framework AppKit \
+    -Xlinker -e -Xlinker _NSExtensionMain -o build/VorssaintFinderExtension
+
 echo "▸ Compiling Now Playing adapter…"
 swiftc -O -target "$TARGET" -sdk "$SDK" "${SDK_COMPAT_FLAGS[@]}" -emit-library \
     -module-name VorssaintNowPlaying \
@@ -667,6 +681,16 @@ cp Resources/agent-prices.json "$STAGE/Contents/Resources/agent-prices.json"
 cp Resources/com.vorssaint.utils.fan-control.plist \
     "$STAGE/Contents/Library/LaunchDaemons/$FAN_HELPER_ID.plist"
 cp Resources/Info.plist "$STAGE/Contents/Info.plist"
+FINDER_EXTENSION="$STAGE/Contents/PlugIns/VorssaintFinderExtension.appex"
+mkdir -p "$FINDER_EXTENSION/Contents/MacOS"
+cp build/VorssaintFinderExtension "$FINDER_EXTENSION/Contents/MacOS/"
+cp Resources/FinderExtension-Info.plist "$FINDER_EXTENSION/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $APP_BUNDLE_ID.finder-extension" "$FINDER_EXTENSION/Contents/Info.plist"
+for version_key in CFBundleVersion CFBundleShortVersionString; do
+    version_value="$(/usr/libexec/PlistBuddy -c "Print :$version_key" Resources/Info.plist)"
+    /usr/libexec/PlistBuddy -c "Set :$version_key $version_value" "$FINDER_EXTENSION/Contents/Info.plist"
+done
+
 cp CHANGELOG.md "$STAGE/Contents/Resources/CHANGELOG.md"
 for lproj in Resources/*.lproj(N); do
     cp -R "$lproj" "$STAGE/Contents/Resources/"
@@ -770,6 +794,20 @@ codesign_now_playing_adapter() {
     fi
 }
 
+codesign_finder_extension() {
+    local target="$1"
+    if [[ -n "$DEVID" ]]; then
+        codesign_with_timestamp_retry --force --strip-disallowed-xattrs --options runtime --timestamp \
+            --entitlements Resources/FinderExtension.entitlements --sign "$DEVID" "$target"
+    elif legacy_identity_installed; then
+        codesign --force --strip-disallowed-xattrs --entitlements Resources/FinderExtension.entitlements \
+            --sign "$LEGACY_IDENTITY" "$target"
+    else
+        codesign --force --strip-disallowed-xattrs --entitlements Resources/FinderExtension.entitlements \
+            --sign - "$target"
+    fi
+}
+
 sign_bundle() {
     local bundle="$1"
     local executable="$bundle/Contents/MacOS/$EXECUTABLE"
@@ -785,6 +823,7 @@ sign_bundle() {
     fi
     [[ -f "$helper" ]] && codesign_fan_helper "$helper"
     [[ -f "$adapter" ]] && codesign_now_playing_adapter "$adapter"
+    codesign_finder_extension "$bundle/Contents/PlugIns/VorssaintFinderExtension.appex"
     codesign_app "$bundle"
 
     # If local filesystem metadata invalidates the first signature, sign once
@@ -794,6 +833,7 @@ sign_bundle() {
         xattr -c -r "$bundle" 2>/dev/null || true
         [[ -f "$helper" ]] && codesign_fan_helper "$helper"
         [[ -f "$adapter" ]] && codesign_now_playing_adapter "$adapter"
+        codesign_finder_extension "$bundle/Contents/PlugIns/VorssaintFinderExtension.appex"
         codesign_app "$bundle"
     fi
     [[ -f "$executable" ]] && codesign --verify --strict "$executable"
